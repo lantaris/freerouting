@@ -15,12 +15,12 @@ public class RoutingCostSettings implements Serializable, Cloneable {
   // The cost of 1 mm of trace length if the trace is routed in the preferred
   // direction, defined for each layer.
   @SerializedName("preferred_direction_trace_cost")
-  public transient double[] preferredDirectionTraceCost;
+  public double[] preferredDirectionTraceCost;
 
   // The cost of 1 mm of trace length if the trace is routed in the undesired
   // direction, defined for each layer.
   @SerializedName("undesired_direction_trace_cost")
-  public transient double[] undesiredDirectionTraceCost;
+  public double[] undesiredDirectionTraceCost;
 
   // The default cost of 1 mm of trace length in the preferred direction.
   @SerializedName("default_preferred_direction_trace_cost")

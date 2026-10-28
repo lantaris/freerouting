@@ -139,7 +139,6 @@ public class GuiManager {
         routingJob.routerSettings.applyNewValuesFrom(globalSettings.routerSettings);
       }
 
-
       try {
         routingJob.setInput(globalSettings.initialInputFile);
       } catch (Exception e) {
@@ -364,7 +363,6 @@ public class GuiManager {
       if (globalSettings.routerSettings != null && routingJob.routerSettings != null) {
         routingJob.routerSettings.applyNewValuesFrom(globalSettings.routerSettings);
       }
-
 
       routingJob.setDummyInputFile("tutorial_board.dsn");
       // Load an empty template file from the resources

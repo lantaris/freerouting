@@ -1283,8 +1283,7 @@ public class BoardFrame extends WindowBase {
       if (boardPanel != null && boardPanel.boardHandling != null) {
         var ws = boardPanel.boardHandling.getWorkspaceSettings();
         if (ws != null) {
-          Freerouting.globalSettings.routerSettings.viaSnapToSmdCenter =
-              ws.getViaSnapToSmdCenter();
+          Freerouting.globalSettings.routerSettings.viaSnapToSmdCenter = ws.getViaSnapToSmdCenter();
           Freerouting.globalSettings.routerSettings.automaticNeckdown = ws.getAutomaticNeckdown();
         }
         var brd = boardPanel.boardHandling.getPresentationBoard();

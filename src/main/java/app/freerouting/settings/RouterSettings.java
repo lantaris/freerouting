@@ -113,6 +113,15 @@ public class RouterSettings implements Serializable, Cloneable {
   @SerializedName("keepout_outside_outline")
   public Boolean keepoutOutsideOutline;
 
+  /**
+   * Minimum trace width in micrometres for necking paths: fan-out micro-neckdown, pin neckdown and
+   * the necked retry. Those paths never insert a trace narrower than this; a connection that can
+   * only be routed narrower is left unrouted. The net-class width itself is not raised by this
+   * setting. Zero disables the limit (upstream behaviour).
+   */
+  @SerializedName("min_trace_width_um")
+  public Double minTraceWidthUm;
+
   @SerializedName("optimizer")
   public OptimizerSettings optimizer;
 
@@ -635,6 +644,7 @@ public class RouterSettings implements Serializable, Cloneable {
     result.viasAllowed = this.viasAllowed;
     result.automaticNeckdown = this.automaticNeckdown;
     result.viaSnapToSmdCenter = this.viaSnapToSmdCenter;
+    result.minTraceWidthUm = this.minTraceWidthUm;
     result.keepoutOutsideOutline = this.keepoutOutsideOutline;
     result.maxThreads = this.maxThreads;
 
@@ -1075,6 +1085,17 @@ public class RouterSettings implements Serializable, Cloneable {
   /** Returns whether automatic trace neckdown is enabled. */
   public boolean getAutomaticNeckdown() {
     return this.automaticNeckdown != null && this.automaticNeckdown;
+  }
+
+  /** Sets whether automatic trace neckdown is enabled. */
+  /** Minimum trace width in um the router may use; 0 means no limit. */
+  public double getMinTraceWidthUm() {
+    return this.minTraceWidthUm != null && this.minTraceWidthUm > 0 ? this.minTraceWidthUm : 0;
+  }
+
+  /** Sets the minimum trace width in um; 0 disables the limit. */
+  public void setMinTraceWidthUm(double value) {
+    this.minTraceWidthUm = value;
   }
 
   /** Sets whether automatic trace neckdown is enabled. */

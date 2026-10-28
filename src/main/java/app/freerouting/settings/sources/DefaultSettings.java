@@ -98,6 +98,9 @@ public class DefaultSettings implements SettingsSource {
    */
   public static final double DEFAULT_NECK_WIDTH_UM = 0.0;
 
+  /** Minimum trace width the router may use; 0 means no limit (upstream behaviour). */
+  public static final double DEFAULT_MIN_TRACE_WIDTH_UM = 0.0;
+
   /** Current default router score formula. */
   public static final RouterScoringVersion DEFAULT_ROUTER_SCORING_VERSION =
       RouterScoringVersion.V2_CONTINUOUS;
@@ -172,6 +175,7 @@ public class DefaultSettings implements SettingsSource {
     settings.planeNets = new String[0];
     settings.planeAsObstacle = false;
     settings.neckWidthUm = DEFAULT_NECK_WIDTH_UM;
+    settings.minTraceWidthUm = DEFAULT_MIN_TRACE_WIDTH_UM;
     settings.strictDrc = false;
 
     // layers is left null intentionally –

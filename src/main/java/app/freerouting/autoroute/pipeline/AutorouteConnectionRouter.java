@@ -184,6 +184,24 @@ final class AutorouteConnectionRouter {
                     Unit.UM,
                     router.board.communication.unit));
     int neckHalfWidth = Math.max(1, neckWidth / 2);
+    double minWidthUm = router.settings.getMinTraceWidthUm();
+    if (minWidthUm > 0) {
+      int minWidthUnits =
+          (int)
+              Math.round(
+                  Unit.scale(
+                      minWidthUm * boardResolution, Unit.UM, router.board.communication.unit));
+      if (neckWidth < minWidthUnits) {
+        FRLogger.debug(
+            "necked retry rejected below min width net="
+                + routeNetNo
+                + ", neck_width="
+                + neckWidth
+                + ", min_width_units="
+                + minWidthUnits);
+        return null;
+      }
+    }
     boolean narrowerSomewhere = false;
     for (int i = 0; i < originalControl.layerCount; i++) {
       if (originalControl.layerActive[i] && originalControl.traceHalfWidth[i] > neckHalfWidth) {

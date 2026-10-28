@@ -7,6 +7,7 @@ import app.freerouting.board.facade.RoutingBoard;
 import app.freerouting.board.model.items.Item;
 import app.freerouting.board.model.items.Pin;
 import app.freerouting.board.model.items.Trace;
+import app.freerouting.board.model.structure.Unit;
 import app.freerouting.board.trace.PolylineTrace;
 import app.freerouting.core.library.Padstack;
 import app.freerouting.geometry.planar.FloatPoint;
@@ -501,8 +502,21 @@ public final class FoundConnectionInserter {
     candidateHalfWidths.add(Math.max(1, (baseHalfWidth * 3) / 5));
     candidateHalfWidths.add(Math.max(1, baseHalfWidth / 2));
 
+    final int minWidthUnits = minTraceWidthInBoardUnits();
     for (int candidateHalfWidth : candidateHalfWidths) {
       if (candidateHalfWidth <= 0 || candidateHalfWidth >= baseHalfWidth) {
+        continue;
+      }
+      // A trace narrower than the configured minimum is never inserted; the connection stays
+      // unrouted instead of silently violating the board's minimum width.
+      if (minWidthUnits > 0 && candidateHalfWidth * 2 < minWidthUnits) {
+        FRLogger.debug(
+            "neckdown candidate rejected below min width net="
+                + ctrl.netNumber
+                + ", candidate_half_width="
+                + candidateHalfWidth
+                + ", min_width_units="
+                + minWidthUnits);
         continue;
       }
       Point candidateOkPoint =
@@ -582,6 +596,17 @@ public final class FoundConnectionInserter {
 
     int neckDownHalfwidth = pin.getTraceNeckdownHalfwidth(layer);
     if (neckDownHalfwidth >= ctrl.traceHalfWidth[layer]) {
+      return null;
+    }
+    int minWidthUnits = minTraceWidthInBoardUnits();
+    if (minWidthUnits > 0 && neckDownHalfwidth * 2 < minWidthUnits) {
+      FRLogger.debug(
+          "pin neckdown rejected below min width net="
+              + ctrl.netNumber
+              + ", pin_half_width="
+              + neckDownHalfwidth
+              + ", min_width_units="
+              + minWidthUnits);
       return null;
     }
 
@@ -813,6 +838,22 @@ public final class FoundConnectionInserter {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Narrowest trace width, in board units, that the router may insert. Returns 0 when no minimum is
+   * configured. The micrometre value is converted through {@link Unit#scale}, so boards measured in
+   * micrometres, millimetres or mils behave identically.
+   */
+  private int minTraceWidthInBoardUnits() {
+    double minWidthUm = ctrl != null ? ctrl.settings.getMinTraceWidthUm() : 0;
+    if (minWidthUm <= 0) {
+      return 0;
+    }
+    var communication = board.communication;
+    int resolution = Math.max(1, communication.resolution);
+    double scaled = Unit.scale(minWidthUm * resolution, Unit.UM, communication.unit);
+    return Math.max(1, (int) Math.round(scaled));
   }
 
   private boolean shouldTraceFanoutDiagnostics() {

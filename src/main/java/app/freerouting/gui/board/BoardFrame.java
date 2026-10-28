@@ -279,6 +279,7 @@ public class BoardFrame extends WindowBase {
 
     this.addBoardLoadedEventListener(
         (RoutingBoard board) -> {
+          applyPersistedWorkspaceSettings(board);
           boolean isBoardEmpty = (board == null) || (board.components.count() == 0);
           this.menubar.fileMenu.fileSaveAsMenuitem.setEnabled(!isBoardEmpty);
           this.menubar.appereanceMenu.setEnabled(!isBoardEmpty);
@@ -1269,10 +1270,98 @@ public class BoardFrame extends WindowBase {
     return true;
   }
 
+  /**
+   * Copies the live in-app settings (the object the settings dialogs actually edit) into the global
+   * settings object, so that saving the global settings writes real values.
+   */
+  private void copyLiveSettingsToGlobal() {
+    try {
+      if (routingJob != null && routingJob.routerSettings != null) {
+        Freerouting.globalSettings.routerSettings.applyNewValuesFrom(routingJob.routerSettings);
+      }
+      // Board-level (workspace) flags that the "Route settings" dialog edits
+      if (boardPanel != null && boardPanel.boardHandling != null) {
+        var ws = boardPanel.boardHandling.getWorkspaceSettings();
+        if (ws != null) {
+          Freerouting.globalSettings.routerSettings.viaSnapToSmdCenter =
+              ws.getViaSnapToSmdCenter();
+          Freerouting.globalSettings.routerSettings.automaticNeckdown = ws.getAutomaticNeckdown();
+        }
+        var brd = boardPanel.boardHandling.getPresentationBoard();
+        if (brd != null && brd.getOutline() != null) {
+          Freerouting.globalSettings.routerSettings.keepoutOutsideOutline =
+              brd.getOutline().keepoutOutsideOutlineGenerated();
+        }
+      }
+    } catch (Exception e) {
+      FRLogger.warn("Could not copy live settings: " + e.getMessage());
+    }
+  }
+
+  /** Applies the persisted workspace flags to a freshly loaded board. */
+  private void applyPersistedWorkspaceSettings(RoutingBoard board) {
+    try {
+      var rs = Freerouting.globalSettings.routerSettings;
+      if (rs == null || board == null) {
+        return;
+      }
+      if (rs.keepoutOutsideOutline != null && board.getOutline() != null) {
+        board.getOutline().generateKeepoutOutside(rs.keepoutOutsideOutline);
+      }
+      if (boardPanel != null && boardPanel.boardHandling != null) {
+        var ws = boardPanel.boardHandling.getWorkspaceSettings();
+        if (ws != null) {
+          if (rs.viaSnapToSmdCenter != null) {
+            ws.setViaSnapToSmdCenter(rs.viaSnapToSmdCenter);
+          }
+          if (rs.automaticNeckdown != null) {
+            ws.setAutomaticNeckdown(rs.automaticNeckdown);
+          }
+        }
+      }
+    } catch (Exception e) {
+      FRLogger.warn("Could not apply persisted workspace settings: " + e.getMessage());
+    }
+  }
+
+  /** File / Save settings: writes the current in-app settings to the configuration file. */
+  public void saveSettingsToFile() {
+    copyLiveSettingsToGlobal();
+    try {
+      GlobalSettings.saveAsJson(Freerouting.globalSettings);
+      FRLogger.info("Settings were saved to the configuration file.");
+    } catch (IOException e) {
+      FRLogger.error("Could not save settings to the configuration file", e);
+    }
+  }
+
+  /** File / Default settings: resets settings to the built-in defaults and saves them at once. */
+  public void restoreDefaultSettings() {
+    app.freerouting.settings.RouterSettings defaults =
+        new app.freerouting.settings.RouterSettings();
+    if (routingJob != null && routingJob.routerSettings != null) {
+      routingJob.routerSettings.applyNewValuesFrom(defaults);
+    }
+    Freerouting.globalSettings.routerSettings.applyNewValuesFrom(defaults);
+    try {
+      GlobalSettings.saveAsJson(Freerouting.globalSettings);
+      FRLogger.info("Settings were reset to defaults and saved.");
+    } catch (IOException e) {
+      FRLogger.error("Could not save default settings to the configuration file", e);
+    }
+  }
+
   private class WindowStateListener extends WindowAdapter {
 
     @Override
     public void windowClosing(WindowEvent evt) {
+      // Сохраняем настройки (автотрассировщик, трассировка, слои) при выходе
+      copyLiveSettingsToGlobal();
+      try {
+        GlobalSettings.saveAsJson(Freerouting.globalSettings);
+      } catch (IOException e) {
+        FRLogger.warn("Could not save settings on exit: " + e.getMessage());
+      }
       setDefaultCloseOperation(DISPOSE_ON_CLOSE);
       boolean wasBoardChanged =
           boardPanel != null

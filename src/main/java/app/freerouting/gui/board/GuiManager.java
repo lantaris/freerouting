@@ -134,6 +134,11 @@ public class GuiManager {
       // let's create a job in our session and queue it
       FRLogger.info("Opening '" + globalSettings.initialInputFile + "'...");
       routingJob = new RoutingJob(guiSession.getId());
+      // Apply the persisted router settings (File / Save settings) to the new job
+      if (globalSettings.routerSettings != null && routingJob.routerSettings != null) {
+        routingJob.routerSettings.applyNewValuesFrom(globalSettings.routerSettings);
+      }
+
 
       try {
         routingJob.setInput(globalSettings.initialInputFile);
@@ -355,6 +360,11 @@ public class GuiManager {
     InputStream inputStream = null;
     if ((routingJob == null) || (routingJob.input.getFile() == null)) {
       routingJob = new RoutingJob(SessionManager.getInstance().getPrimarySession().id);
+      // Apply the persisted router settings (File / Save settings) to the new job
+      if (globalSettings.routerSettings != null && routingJob.routerSettings != null) {
+        routingJob.routerSettings.applyNewValuesFrom(globalSettings.routerSettings);
+      }
+
 
       routingJob.setDummyInputFile("tutorial_board.dsn");
       // Load an empty template file from the resources

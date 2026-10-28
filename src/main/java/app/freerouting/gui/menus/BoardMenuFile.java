@@ -71,6 +71,20 @@ public class BoardMenuFile extends JMenu {
 
     add(fileSaveAsMenuitem);
 
+    // File / Save settings (persist the current in-app settings to the configuration file)
+    JMenuItem fileSaveSettingsMenuitem = new JMenuItem();
+    fileSaveSettingsMenuitem.setText(tm.getText("save_settings"));
+    fileSaveSettingsMenuitem.setToolTipText(tm.getText("save_settings_tooltip"));
+    fileSaveSettingsMenuitem.addActionListener(_ -> boardFrame.saveSettingsToFile());
+    add(fileSaveSettingsMenuitem);
+
+    // File / Default settings (reset to built-in defaults and save them at once)
+    JMenuItem fileDefaultSettingsMenuitem = new JMenuItem();
+    fileDefaultSettingsMenuitem.setText(tm.getText("default_settings"));
+    fileDefaultSettingsMenuitem.setToolTipText(tm.getText("default_settings_tooltip"));
+    fileDefaultSettingsMenuitem.addActionListener(_ -> boardFrame.restoreDefaultSettings());
+    add(fileDefaultSettingsMenuitem);
+
     // File / Exit
     JMenuItem fileExitMenuitem = new JMenuItem();
     fileExitMenuitem.setText(tm.getText("exit"));

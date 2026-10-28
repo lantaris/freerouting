@@ -82,7 +82,7 @@ public class RouterSettings implements Serializable, Cloneable {
   @Schema(
       description =
           "Per-layer configuration (routability, direction, bend cost, preferred/undesired costs)")
-  public transient LayerSettings[] layers;
+  public LayerSettings[] layers;
 
   /** Diagnostic validation warnings populated during settings preflight/validation. */
   @SerializedName("validation_warnings")
@@ -106,6 +106,12 @@ public class RouterSettings implements Serializable, Cloneable {
       value = "automatic_neckdown",
       alternate = {"automaticNeckdown"})
   public Boolean automaticNeckdown;
+
+  @SerializedName("via_snap_to_smd_center")
+  public Boolean viaSnapToSmdCenter;
+
+  @SerializedName("keepout_outside_outline")
+  public Boolean keepoutOutsideOutline;
 
   @SerializedName("optimizer")
   public OptimizerSettings optimizer;
@@ -628,6 +634,8 @@ public class RouterSettings implements Serializable, Cloneable {
     result.tracePullTightAccuracy = this.tracePullTightAccuracy;
     result.viasAllowed = this.viasAllowed;
     result.automaticNeckdown = this.automaticNeckdown;
+    result.viaSnapToSmdCenter = this.viaSnapToSmdCenter;
+    result.keepoutOutsideOutline = this.keepoutOutsideOutline;
     result.maxThreads = this.maxThreads;
 
     // Use proper clone() methods for nested objects

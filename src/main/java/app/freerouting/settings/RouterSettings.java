@@ -2,6 +2,8 @@ package app.freerouting.settings;
 
 import app.freerouting.autoroute.maze.AutorouteControl;
 import app.freerouting.board.facade.RoutingBoard;
+import app.freerouting.board.model.structure.Unit;
+import app.freerouting.board.state.Communication;
 import app.freerouting.logger.FRLogger;
 import app.freerouting.util.ReflectionUtil;
 import com.google.gson.annotations.SerializedName;
@@ -1087,7 +1089,6 @@ public class RouterSettings implements Serializable, Cloneable {
     return this.automaticNeckdown != null && this.automaticNeckdown;
   }
 
-  /** Sets whether automatic trace neckdown is enabled. */
   /** Minimum trace width in um the router may use; 0 means no limit. */
   public double getMinTraceWidthUm() {
     return this.minTraceWidthUm != null && this.minTraceWidthUm > 0 ? this.minTraceWidthUm : 0;
@@ -1096,6 +1097,30 @@ public class RouterSettings implements Serializable, Cloneable {
   /** Sets the minimum trace width in um; 0 disables the limit. */
   public void setMinTraceWidthUm(double value) {
     this.minTraceWidthUm = value;
+  }
+
+  /**
+   * Converts {@link #getMinTraceWidthUm()} into board units for a board measured with the given
+   * communication settings. Returns 0 when no minimum is configured. The conversion goes through
+   * {@link Unit#scale}, so boards in micrometres, millimetres and mils resolve to the same physical
+   * width.
+   *
+   * @param settings router settings that carry the minimum; may be null
+   * @param communication board communication settings; may be null
+   * @return minimum trace width in board units, or 0 when unlimited or unknown
+   */
+  public static int minTraceWidthInBoardUnits(
+      RouterSettings settings, Communication communication) {
+    if (settings == null || communication == null) {
+      return 0;
+    }
+    double minWidthUm = settings.getMinTraceWidthUm();
+    if (minWidthUm <= 0) {
+      return 0;
+    }
+    int resolution = Math.max(1, communication.resolution);
+    double scaled = Unit.scale(minWidthUm * resolution, Unit.UM, communication.unit);
+    return Math.max(1, (int) Math.round(scaled));
   }
 
   /** Sets whether automatic trace neckdown is enabled. */

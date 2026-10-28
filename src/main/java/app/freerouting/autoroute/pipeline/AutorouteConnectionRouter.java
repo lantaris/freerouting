@@ -12,6 +12,7 @@ import app.freerouting.board.model.structure.Unit;
 import app.freerouting.datastructures.TimeLimit;
 import app.freerouting.logger.FRLogger;
 import app.freerouting.rules.Net;
+import app.freerouting.settings.RouterSettings;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -184,23 +185,17 @@ final class AutorouteConnectionRouter {
                     Unit.UM,
                     router.board.communication.unit));
     int neckHalfWidth = Math.max(1, neckWidth / 2);
-    double minWidthUm = router.settings.getMinTraceWidthUm();
-    if (minWidthUm > 0) {
-      int minWidthUnits =
-          (int)
-              Math.round(
-                  Unit.scale(
-                      minWidthUm * boardResolution, Unit.UM, router.board.communication.unit));
-      if (neckWidth < minWidthUnits) {
-        FRLogger.debug(
-            "necked retry rejected below min width net="
-                + routeNetNo
-                + ", neck_width="
-                + neckWidth
-                + ", min_width_units="
-                + minWidthUnits);
-        return null;
-      }
+    int minWidthUnits =
+        RouterSettings.minTraceWidthInBoardUnits(router.settings, router.board.communication);
+    if (minWidthUnits > 0 && 2 * neckHalfWidth < minWidthUnits) {
+      FRLogger.debug(
+          "necked retry rejected below min width net="
+              + routeNetNo
+              + ", neck_width="
+              + (2 * neckHalfWidth)
+              + ", min_width_units="
+              + minWidthUnits);
+      return null;
     }
     boolean narrowerSomewhere = false;
     for (int i = 0; i < originalControl.layerCount; i++) {

@@ -7,7 +7,6 @@ import app.freerouting.board.facade.RoutingBoard;
 import app.freerouting.board.model.items.Item;
 import app.freerouting.board.model.items.Pin;
 import app.freerouting.board.model.items.Trace;
-import app.freerouting.board.model.structure.Unit;
 import app.freerouting.board.trace.PolylineTrace;
 import app.freerouting.core.library.Padstack;
 import app.freerouting.geometry.planar.FloatPoint;
@@ -16,6 +15,7 @@ import app.freerouting.geometry.planar.Point;
 import app.freerouting.geometry.planar.Polyline;
 import app.freerouting.logger.FRLogger;
 import app.freerouting.rules.ViaInfo;
+import app.freerouting.settings.RouterSettings;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -840,20 +840,9 @@ public final class FoundConnectionInserter {
     return true;
   }
 
-  /**
-   * Narrowest trace width, in board units, that the router may insert. Returns 0 when no minimum is
-   * configured. The micrometre value is converted through {@link Unit#scale}, so boards measured in
-   * micrometres, millimetres or mils behave identically.
-   */
+  /** Narrowest trace width, in board units, that the router may insert (0 when unlimited). */
   private int minTraceWidthInBoardUnits() {
-    double minWidthUm = ctrl != null ? ctrl.settings.getMinTraceWidthUm() : 0;
-    if (minWidthUm <= 0) {
-      return 0;
-    }
-    var communication = board.communication;
-    int resolution = Math.max(1, communication.resolution);
-    double scaled = Unit.scale(minWidthUm * resolution, Unit.UM, communication.unit);
-    return Math.max(1, (int) Math.round(scaled));
+    return RouterSettings.minTraceWidthInBoardUnits(ctrl.settings, board.communication);
   }
 
   private boolean shouldTraceFanoutDiagnostics() {

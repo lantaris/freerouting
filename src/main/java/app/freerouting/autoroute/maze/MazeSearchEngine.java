@@ -29,6 +29,7 @@ import app.freerouting.geometry.planar.Point;
 import app.freerouting.geometry.planar.Polyline;
 import app.freerouting.geometry.planar.TileShape;
 import app.freerouting.logger.FRLogger;
+import app.freerouting.settings.RouterSettings;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -408,6 +409,8 @@ public class MazeSearchEngine {
         // try evtl. neckdown at a destination pin
         double neckDownHalfWidth = checkNeckDownAtDestPin(listElement.nextRoom);
         if (neckDownHalfWidth > 0) {
+          // never plan a narrowing below the configured minimum trace width
+          neckDownHalfWidth = Math.max(neckDownHalfWidth, minTraceHalfWidth());
           halfWidthAdd = Math.min(halfWidthAdd, neckDownHalfWidth);
           halfWidth = halfWidthAdd;
         }
@@ -447,6 +450,8 @@ public class MazeSearchEngine {
       if (startItem instanceof Pin pin) {
         double neckdownHalfWidth = pin.getTraceNeckdownHalfwidth(layerIndex);
         if (neckdownHalfWidth > 0) {
+          // never plan a narrowing below the configured minimum trace width
+          neckdownHalfWidth = Math.max(neckdownHalfWidth, minTraceHalfWidth());
           halfWidth = Math.min(halfWidth, neckdownHalfWidth);
         }
       }
@@ -764,6 +769,17 @@ public class MazeSearchEngine {
   }
 
   /** Checks, if the width door is big enough for a trace with width traceWidth. */
+  /**
+   * Narrowest trace half width the router may use, in board units. Returns 0 when no minimum trace
+   * width is configured, so callers can skip the clamp entirely.
+   */
+  private double minTraceHalfWidth() {
+    int minWidthUnits =
+        RouterSettings.minTraceWidthInBoardUnits(
+            ctrl.settings, autorouteEngine.board.communication);
+    return minWidthUnits <= 0 ? 0 : minWidthUnits / 2.0;
+  }
+
   private boolean doorIsSmall(ExpansionDoor door, double traceWidth) {
     if (door.dimension == 1
         || door.firstRoom instanceof CompleteFreeSpaceExpansionRoom
